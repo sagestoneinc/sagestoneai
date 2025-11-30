@@ -1,0 +1,14 @@
+{
+  "project": "sagestone-website-audit",
+  "phases": [
+    "ux-audit-discovery",
+    "design-planning",
+    "development",
+    "qa-testing",
+    "go-live"
+  ],
+  "team": ["project-manager", "designer", "developer", "qa-engineer", "devops"],
+  "start_date": "2025-11-30",
+  "end_date": "2025-12-30",
+  "sprint_duration": 7
+}
