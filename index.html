@@ -1,0 +1,2079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sagestone Copilot Agent - Project Manager</title>
+    <style>
+        :root {
+            --color-primary: #2158D0;
+            --color-primary-hover: #1a45a0;
+            --color-success: #22c55e;
+            --color-warning: #f59e0b;
+            --color-error: #ef4444;
+            --color-bg: #f8fafc;
+            --color-surface: #ffffff;
+            --color-text: #1e293b;
+            --color-text-secondary: #64748b;
+            --color-border: #e2e8f0;
+            --radius: 8px;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: var(--color-surface);
+            border-bottom: 1px solid var(--color-border);
+            padding: 20px 0;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--color-primary);
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--color-primary);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            background: #dcfce7;
+            color: #166534;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge.in-progress {
+            background: #dbeafe;
+            color: #0c4a6e;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--color-primary-hover);
+        }
+
+        .btn-secondary {
+            background: var(--color-border);
+            color: var(--color-text);
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .tab {
+            padding: 12px 16px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: var(--color-text-secondary);
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+        }
+
+        .tab:hover {
+            color: var(--color-text);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .column {
+            background: var(--color-surface);
+            border-radius: var(--radius);
+            padding: 16px;
+            border: 1px solid var(--color-border);
+        }
+
+        .column-header {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--color-text-secondary);
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .column-count {
+            background: var(--color-border);
+            color: var(--color-text-secondary);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .task-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .task-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .task-card.high-priority {
+            border-left: 4px solid var(--color-error);
+        }
+
+        .task-card.medium-priority {
+            border-left: 4px solid var(--color-warning);
+        }
+
+        .task-card.low-priority {
+            border-left: 4px solid var(--color-success);
+        }
+
+        .task-title {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 8px;
+            color: var(--color-text);
+        }
+
+        .task-meta {
+            display: flex;
+            gap: 8px;
+            font-size: 11px;
+            color: var(--color-text-secondary);
+            flex-wrap: wrap;
+        }
+
+        .task-assignee {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--color-bg);
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .task-progress {
+            margin-top: 8px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: var(--color-border);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--color-primary);
+            transition: width 0.3s ease;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--color-surface);
+            border-radius: var(--radius);
+            padding: 20px;
+            border: 1px solid var(--color-border);
+            box-shadow: var(--shadow);
+        }
+
+        .card-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 16px;
+            color: var(--color-text);
+        }
+
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .stat:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+        }
+
+        .stat-value {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--color-primary);
+        }
+
+        .phase-timeline {
+            margin-top: 16px;
+        }
+
+        .phase-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+
+        .phase-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--color-border);
+            flex-shrink: 0;
+        }
+
+        .phase-dot.active {
+            background: var(--color-primary);
+            width: 12px;
+            height: 12px;
+            margin-left: -2px;
+            margin-right: -2px;
+        }
+
+        .phase-dot.completed {
+            background: var(--color-success);
+        }
+
+        .phase-label {
+            color: var(--color-text-secondary);
+        }
+
+        .phase-label.active {
+            color: var(--color-text);
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--color-text);
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+            color: var(--color-text);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(33, 88, 208, 0.1);
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--color-surface);
+            border-radius: var(--radius);
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-header {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--color-text);
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            margin-top: 24px;
+            justify-content: flex-end;
+        }
+
+        .tasks-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            background: var(--color-bg);
+            border-radius: 6px;
+            border-left: 4px solid var(--color-primary);
+        }
+
+        .task-item.completed {
+            opacity: 0.6;
+            border-left-color: var(--color-success);
+        }
+
+        .task-checkbox {
+            width: 18px;
+            height: 18px;
+            margin-top: 2px;
+            cursor: pointer;
+            accent-color: var(--color-primary);
+        }
+
+        .task-info {
+            flex: 1;
+        }
+
+        .task-label {
+            font-weight: 500;
+            font-size: 13px;
+            color: var(--color-text);
+            margin-bottom: 4px;
+        }
+
+        .task-desc {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+        }
+
+        .milestone {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: var(--color-bg);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--color-primary);
+        }
+
+        .milestone-name {
+            font-weight: 500;
+            font-size: 13px;
+            color: var(--color-text);
+        }
+
+        .milestone-date {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .board {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .board {
+                grid-template-columns: 1fr;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">⚙️</div>
+                <span>Sagestone Copilot Agent</span>
+            </div>
+            <div class="header-actions">
+                <span class="status-badge in-progress">⏱️ Phase 1 - In Progress</span>
+                <button class="btn btn-secondary" onclick="generateReport()">📊 Generate Report</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="main-content">
+            <div>
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab(event, 'board')">📋 Kanban Board</button>
+                    <button class="tab" onclick="switchTab(event, 'checklist')">✓ Task Checklist</button>
+                    <button class="tab" onclick="switchTab(event, 'timeline')">📅 Timeline</button>
+                    <button class="tab" onclick="switchTab(event, 'commands')">💬 Copilot Commands</button>
+                </div>
+
+                <!-- Kanban Board Tab -->
+                <div id="board" class="tab-content active">
+                    <div class="board">
+                        <div class="column">
+                            <div class="column-header">
+                                📌 Backlog
+                                <span class="column-count">8</span>
+                            </div>
+                            <div class="task-card medium-priority">
+                                <div class="task-title">Analytics Dashboard Setup</div>
+                                <div class="task-meta">
+                                    <span class="task-assignee">DevOps</span>
+                                </div>
+                            </div>
+                            <div class="task-card low-priority">
+                                <div class="task-title">Integrations Visual Update</div>
+                                <div class="task-meta">
+                                    <span class="task-assignee">Designer</span>
+                                </div>
+                            </div>
+                            <div class="task-card low-priority">
+                                <div class="task-title">Gather Competitive UI References</div>
+                                <div class="task-meta">
+                                    <span class="task-assignee">PM</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="column">
+                            <div class="column-header">
+                                🔄 In Progress
+                                <span class="column-count">3</span>
+                            </div>
+                            <div class="task-card high-priority">
+                                <div class="task-title">UX Audit & Discovery</div>
+                                <div class="task-meta">
+                                    <span class="task-assignee">Designer</span>
+                                </div>
+                                <div class="task-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 60%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="task-card high-priority">
+                                <div class="task-title">Homepage Hero Section Design</div>
+                                <div class="task-meta">
+                                    <span class="task-assignee">Designer</span>
+                                </div>
+                                <div class="task-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 40%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="task-card medium-priority">
+                                <div class="task-title">Product Demo Video Script</div>
+                                <div class="task-meta">
+                                    <span class="task-assignee">Marketing</span>
+                                </div>
+                                <div class="task-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 50%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="column">
+                            <div class="column-header">
+                                🔍 Review / QA
+                                <span class="column-count">2</span>
+                            </div>
+                            <div class="task-card low-priority">
+                                <div class="task-title">Mobile Responsiveness QA</div>
+                                <div class="task-meta">
+                                    <span class="task-assignee">QA</span>
+                                </div>
+                                <div class="task-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 75%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="task-card low-priority">
+                                <div class="task-title">Broken Link & Typo QA Pass</div>
+                                <div class="task-meta">
+                                    <span class="task-assignee">QA</span>
+                                </div>
+                                <div class="task-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 30%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="column">
+                            <div class="column-header">
+                                ✅ Done
+                                <span class="column-count">5</span>
+                            </div>
+                            <div class="task-card">
+                                <div class="task-title">Competitive Analysis Report</div>
+                                <div class="task-meta">
+                                    <span class="task-assignee">PM</span>
+                                </div>
+                                <div class="task-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 100%; background: var(--color-success)"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="task-card">
+                                <div class="task-title">Stakeholder Kickoff Meeting</div>
+                                <div class="task-meta">
+                                    <span class="task-assignee">PM</span>
+                                </div>
+                                <div class="task-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 100%; background: var(--color-success)"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="task-card">
+                                <div class="task-title">GitHub Repository Setup</div>
+                                <div class="task-meta">
+                                    <span class="task-assignee">DevOps</span>
+                                </div>
+                                <div class="task-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 100%; background: var(--color-success)"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task Checklist Tab -->
+                <div id="checklist" class="tab-content">
+                    <div style="background: var(--color-surface); padding: 20px; border-radius: var(--radius); border: 1px solid var(--color-border);">
+                        <h3 style="margin-bottom: 20px;">Sprint 1: UX Audit & Discovery (Days 1-5)</h3>
+                        <div class="tasks-list">
+                            <label class="task-item">
+                                <input type="checkbox" class="task-checkbox" checked>
+                                <div class="task-info">
+                                    <div class="task-label">Conduct UX Audit</div>
+                                    <div class="task-desc">Review current website, identify pain points and opportunities</div>
+                                </div>
+                            </label>
+                            <label class="task-item">
+                                <input type="checkbox" class="task-checkbox" checked>
+                                <div class="task-info">
+                                    <div class="task-label">Competitive Analysis</div>
+                                    <div class="task-desc">Research Jasper, SurferSEO, SEMRush, and other competitors</div>
+                                </div>
+                            </label>
+                            <label class="task-item">
+                                <input type="checkbox" class="task-checkbox">
+                                <div class="task-info">
+                                    <div class="task-label">Draft Improvements</div>
+                                    <div class="task-desc">Document recommendations and opportunities for enhancement</div>
+                                </div>
+                            </label>
+                            <label class="task-item completed">
+                                <input type="checkbox" class="task-checkbox" checked disabled>
+                                <div class="task-info">
+                                    <div class="task-label">Stakeholder Kickoff</div>
+                                    <div class="task-desc">Present findings and get team alignment</div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <h3 style="margin: 30px 0 20px 0;">Sprint 2: Design & Planning (Days 6-12)</h3>
+                        <div class="tasks-list">
+                            <label class="task-item">
+                                <input type="checkbox" class="task-checkbox">
+                                <div class="task-info">
+                                    <div class="task-label">Homepage Redesign</div>
+                                    <div class="task-desc">Create hero section, navigation, value proposition</div>
+                                </div>
+                            </label>
+                            <label class="task-item">
+                                <input type="checkbox" class="task-checkbox">
+                                <div class="task-info">
+                                    <div class="task-label">Product Demo Assets</div>
+                                    <div class="task-desc">Create GIF, video script, and interactive previews</div>
+                                </div>
+                            </label>
+                            <label class="task-item">
+                                <input type="checkbox" class="task-checkbox">
+                                <div class="task-info">
+                                    <div class="task-label">Onboarding Flow Design</div>
+                                    <div class="task-desc">Design user onboarding journey with tooltips</div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <h3 style="margin: 30px 0 20px 0;">Sprint 3: Development (Days 13-22)</h3>
+                        <div class="tasks-list">
+                            <label class="task-item">
+                                <input type="checkbox" class="task-checkbox">
+                                <div class="task-info">
+                                    <div class="task-label">Navigation & Header</div>
+                                    <div class="task-desc">Build responsive header and main navigation</div>
+                                </div>
+                            </label>
+                            <label class="task-item">
+                                <input type="checkbox" class="task-checkbox">
+                                <div class="task-info">
+                                    <div class="task-label">Onboarding Integration</div>
+                                    <div class="task-desc">Integrate onboarding walkthrough and tooltips</div>
+                                </div>
+                            </label>
+                            <label class="task-item">
+                                <input type="checkbox" class="task-checkbox">
+                                <div class="task-info">
+                                    <div class="task-label">Trust Elements</div>
+                                    <div class="task-desc">Add testimonials, client logos, trust badges</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeline Tab -->
+                <div id="timeline" class="tab-content">
+                    <div style="background: var(--color-surface); padding: 20px; border-radius: var(--radius); border: 1px solid var(--color-border);">
+                        <h3 style="margin-bottom: 20px;">Project Milestones & Phases</h3>
+                        <div style="margin-top: 20px;">
+                            <div class="milestone">
+                                <div>
+                                    <div class="milestone-name">🔴 Phase 1: UX Audit & Discovery</div>
+                                    <div class="milestone-date">Nov 30 - Dec 4 (5 days)</div>
+                                </div>
+                                <div style="text-align: right; font-weight: 600; color: var(--color-warning);">50%</div>
+                            </div>
+                            <div class="milestone">
+                                <div>
+                                    <div class="milestone-name">🟡 Phase 2: Design & Planning</div>
+                                    <div class="milestone-date">Dec 5 - Dec 12 (8 days)</div>
+                                </div>
+                                <div style="text-align: right; font-weight: 600; color: var(--color-text-secondary);">Upcoming</div>
+                            </div>
+                            <div class="milestone">
+                                <div>
+                                    <div class="milestone-name">🟢 Phase 3: Development</div>
+                                    <div class="milestone-date">Dec 13 - Dec 23 (11 days)</div>
+                                </div>
+                                <div style="text-align: right; font-weight: 600; color: var(--color-text-secondary);">Upcoming</div>
+                            </div>
+                            <div class="milestone">
+                                <div>
+                                    <div class="milestone-name">🔵 Phase 4: QA & Testing</div>
+                                    <div class="milestone-date">Dec 24 - Dec 28 (5 days)</div>
+                                </div>
+                                <div style="text-align: right; font-weight: 600; color: var(--color-text-secondary);">Upcoming</div>
+                            </div>
+                            <div class="milestone">
+                                <div>
+                                    <div class="milestone-name">⚪ Phase 5: Go-Live & Optimization</div>
+                                    <div class="milestone-date">Dec 29 - Dec 30 (2 days)</div>
+                                </div>
+                                <div style="text-align: right; font-weight: 600; color: var(--color-text-secondary);">Upcoming</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Copilot Commands Tab -->
+                <div id="commands" class="tab-content">
+                    <div style="background: var(--color-surface); padding: 20px; border-radius: var(--radius); border: 1px solid var(--color-border);">
+                        <h3 style="margin-bottom: 20px;">GitHub Copilot Agent Commands</h3>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label class="form-label" style="margin-top: 0;">Enter Copilot Command</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="text" class="form-input" id="copilotInput" placeholder="@copilot list tasks" style="flex: 1;">
+                                <button class="btn btn-primary" onclick="executeCopilotCommand()">Execute</button>
+                            </div>
+                            <div id="copilotOutput" style="margin-top: 16px; padding: 12px; background: var(--color-bg); border-radius: 6px; display: none; white-space: pre-wrap; font-family: monospace; font-size: 12px; color: var(--color-text-secondary);"></div>
+                        </div>
+
+                        <h3 style="margin: 30px 0 16px 0;">Available Commands</h3>
+                        <div style="display: grid; gap: 12px;">
+                            <div style="padding: 12px; background: var(--color-bg); border-radius: 6px; border-left: 3px solid var(--color-primary);">
+                                <div style="font-weight: 600; margin-bottom: 4px;">@copilot list tasks</div>
+                                <div style="font-size: 12px; color: var(--color-text-secondary);">Show all project tasks with status and assignees</div>
+                            </div>
+                            <div style="padding: 12px; background: var(--color-bg); border-radius: 6px; border-left: 3px solid var(--color-primary);">
+                                <div style="font-weight: 600; margin-bottom: 4px;">@copilot show board</div>
+                                <div style="font-size: 12px; color: var(--color-text-secondary);">Display Kanban board with all task columns</div>
+                            </div>
+                            <div style="padding: 12px; background: var(--color-bg); border-radius: 6px; border-left: 3px solid var(--color-primary);">
+                                <div style="font-weight: 600; margin-bottom: 4px;">@copilot find blockers</div>
+                                <div style="font-size: 12px; color: var(--color-text-secondary);">Identify tasks blocking other work</div>
+                            </div>
+                            <div style="padding: 12px; background: var(--color-bg); border-radius: 6px; border-left: 3px solid var(--color-primary);">
+                                <div style="font-weight: 600; margin-bottom: 4px;">@copilot assign task [name] to [role]</div>
+                                <div style="font-size: 12px; color: var(--color-text-secondary);">Assign a task to a team member</div>
+                            </div>
+                            <div style="padding: 12px; background: var(--color-bg); border-radius: 6px; border-left: 3px solid var(--color-primary);">
+                                <div style="font-weight: 600; margin-bottom: 4px;">@copilot update task [name] to [percentage]%</div>
+                                <div style="font-size: 12px; color: var(--color-text-secondary);">Update task progress percentage</div>
+                            </div>
+                            <div style="padding: 12px; background: var(--color-bg); border-radius: 6px; border-left: 3px solid var(--color-primary);">
+                                <div style="font-weight: 600; margin-bottom: 4px;">@copilot generate weekly report</div>
+                                <div style="font-size: 12px; color: var(--color-text-secondary);">Generate weekly status report</div>
+                            </div>
+                            <div style="padding: 12px; background: var(--color-bg); border-radius: 6px; border-left: 3px solid var(--color-primary);">
+                                <div style="font-weight: 600; margin-bottom: 4px;">@copilot risk assessment</div>
+                                <div style="font-size: 12px; color: var(--color-text-secondary);">Analyze project risks and mitigation</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="card">
+                    <div class="card-title">📊 Project Health</div>
+                    <div class="stat">
+                        <span class="stat-label">Overall Progress</span>
+                        <span class="stat-value">35%</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Tasks Completed</span>
+                        <span class="stat-value">5 / 18</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">On Track</span>
+                        <span class="stat-value" style="color: var(--color-success);">✓ Yes</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Days Remaining</span>
+                        <span class="stat-value">30</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">⏱️ Current Phase</div>
+                    <div class="phase-timeline">
+                        <div class="phase-item">
+                            <div class="phase-dot active"></div>
+                            <div class="phase-label active">Discovery</div>
+                        </div>
+                        <div class="phase-item">
+                            <div class="phase-dot"></div>
+                            <div class="phase-label">Design</div>
+                        </div>
+                        <div class="phase-item">
+                            <div class="phase-dot"></div>
+                            <div class="phase-label">Dev</div>
+                        </div>
+                        <div class="phase-item">
+                            <div class="phase-dot"></div>
+                            <div class="phase-label">QA</div>
+                        </div>
+                        <div class="phase-item">
+                            <div class="phase-dot"></div>
+                            <div class="phase-label">Go-Live</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">👥 Team</div>
+                    <div class="stat">
+                        <span class="stat-label">Designer</span>
+                        <span class="stat-value" style="font-size: 13px;">2 tasks</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Developer</span>
+                        <span class="stat-value" style="font-size: 13px;">3 tasks</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">QA Engineer</span>
+                        <span class="stat-value" style="font-size: 13px;">2 tasks</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">PM</span>
+                        <span class="stat-value" style="font-size: 13px;">1 task</span>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" style="width: 100%;" onclick="openTaskModal()">➕ Add New Task</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Task Modal -->
+    <div class="modal-overlay" id="taskModal">
+        <div class="modal">
+            <div class="modal-header">Create New Task</div>
+            <div class="form-group">
+                <label class="form-label">Task Title</label>
+                <input type="text" class="form-input" id="taskTitle" placeholder="Enter task name">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea class="form-textarea" id="taskDesc" placeholder="Task description..."></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Assign To</label>
+                <select class="form-select" id="taskAssignee">
+                    <option>Designer</option>
+                    <option>Developer</option>
+                    <option>QA Engineer</option>
+                    <option>Project Manager</option>
+                    <option>DevOps</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Priority</label>
+                <select class="form-select" id="taskPriority">
+                    <option>Low</option>
+                    <option>Medium</option>
+                    <option>High</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeTaskModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="createTask()">Create Task</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(event, tabName) {
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function openTaskModal() {
+            document.getElementById('taskModal').classList.add('active');
+        }
+
+        function closeTaskModal() {
+            document.getElementById('taskModal').classList.remove('active');
+        }
+
+        function createTask() {
+            const title = document.getElementById('taskTitle').value;
+            const desc = document.getElementById('taskDesc').value;
+            const assignee = document.getElementById('taskAssignee').value;
+            const priority = document.getElementById('taskPriority').value;
+
+            if (title.trim() === '') {
+                alert('Please enter a task title');
+                return;
+            }
+
+            alert(`Task Created:\n\nTitle: ${title}\nAssignee: ${assignee}\nPriority: ${priority}`);
+            closeTaskModal();
+            document.getElementById('taskTitle').value = '';
+            document.getElementById('taskDesc').value = '';
+        }
+
+        function executeCopilotCommand() {
+            const input = document.getElementById('copilotInput').value;
+            const output = document.getElementById('copilotOutput');
+
+            if (input.includes('list tasks')) {
+                output.textContent = `✓ Sagestone Project Tasks (18 total)\n\n[Backlog] 8 tasks\n[In Progress] 3 tasks\n[Review] 2 tasks\n[Done] 5 tasks\n\nTop Priorities:\n- UX Audit & Discovery (60% complete)\n- Homepage Hero Design (40% complete)\n- Product Demo Script (50% complete)`;
+            } else if (input.includes('find blockers')) {
+                output.textContent = `⚠️ Project Blockers Identified:\n\n1. Pending: Competitor logo collection (needed for trust section)\n2. Waiting: Marketing approval on demo video script\n3. Dependencies: Homepage design blocks documentation page layout\n\nRecommendation: Expedite marketing approval to unblock dev phase`;
+            } else if (input.includes('risk assessment')) {
+                output.textContent = `📋 Project Risk Assessment\n\nCritical Risks:\n- Timeline compression (30 days for 5 phases)\n- Resource bottleneck: Designer working on 2+ concurrent tasks\n- QA testing may reveal major issues late in project\n\nMitigation:\n- Add 1 designer or reallocate tasks\n- Start QA earlier in development\n- Use staging environment for parallel testing`;
+            } else if (input.includes('generate') && input.includes('report')) {
+                output.textContent = `📊 Weekly Status Report (Nov 30 - Dec 7)\n\nPhase 1 Progress: 50%\nTasks Completed: 5 / 18 (28%)\nOn Track: ✓ Yes\n\nCompleted This Week:\n✓ Stakeholder kickoff\n✓ GitHub repo setup\n✓ Competitive analysis\n\nNext Week:\n→ Finalize UX recommendations\n→ Start homepage design\n→ Create demo assets`;
+            } else {
+                output.textContent = `Processing command: "${input}"\n\nCommand executed. Check GitHub Issues for detailed updates.`;
+            }
+
+            output.style.display = 'block';
+        }
+
+        function generateReport() {
+            alert('Generating comprehensive project report...\n\nReport includes:\n• Project Timeline (30 days)\n• Task Breakdown (18 tasks)\n• Team Capacity Analysis\n• Risk Assessment\n• Dependency Map\n• Budget & Resource Allocation\n\nReport will be exported as PDF.');
+        }
+
+        // Close modal on overlay click
+        document.getElementById('taskModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeTaskModal();
+            }
+        });
+    </script>
+</body>
+</html>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sagestone Copilot Agent - Project Manager</title>
+    <style>
+        :root {
+            --color-primary: #2158D0;
+            --color-primary-hover: #1a45a0;
+            --color-success: #22c55e;
+            --color-warning: #f59e0b;
+            --color-error: #ef4444;
+            --color-bg: #f8fafc;
+            --color-surface: #ffffff;
+            --color-text: #1e293b;
+            --color-text-secondary: #64748b;
+            --color-border: #e2e8f0;
+            --radius: 8px;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: var(--color-surface);
+            border-bottom: 1px solid var(--color-border);
+            padding: 20px 0;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--color-primary);
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--color-primary);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            background: #dcfce7;
+            color: #166534;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge.in-progress {
+            background: #dbeafe;
+            color: #0c4a6e;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--color-primary-hover);
+        }
+
+        .btn-secondary {
+            background: var(--color-border);
+            color: var(--color-text);
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .tab {
+            padding: 12px 16px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: var(--color-text-secondary);
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+        }
+
+        .tab:hover {
+            color: var(--color-text);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .column {
+            background: var(--color-surface);
+            border-radius: var(--radius);
+            padding: 16px;
+            border: 1px solid var(--color-border);
+        }
+
+        .column-header {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--color-text-secondary);
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .column-count {
+            background: var(--color-border);
+            color: var(--color-text-secondary);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .task-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .task-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .task-card.high-priority {
+            border-left: 4px solid var(--color-error);
+        }
+
+        .task-card.medium-priority {
+            border-left: 4px solid var(--color-warning);
+        }
+
+        .task-card.low-priority {
+            border-left: 4px solid var(--color-success);
+        }
+
+        .task-title {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 8px;
+            color: var(--color-text);
+        }
+
+        .task-meta {
+            display: flex;
+            gap: 8px;
+            font-size: 11px;
+            color: var(--color-text-secondary);
+            flex-wrap: wrap;
+        }
+
+        .task-assignee {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--color-bg);
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .task-progress {
+            margin-top: 8px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: var(--color-border);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--color-primary);
+            transition: width 0.3s ease;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--color-surface);
+            border-radius: var(--radius);
+            padding: 20px;
+            border: 1px solid var(--color-border);
+            box-shadow: var(--shadow);
+        }
+
+        .card-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 16px;
+            color: var(--color-text);
+        }
+
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .stat:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+        }
+
+        .stat-value {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--color-primary);
+        }
+
+        .phase-timeline {
+            margin-top: 16px;
+        }
+
+        .phase-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+
+        .phase-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--color-border);
+            flex-shrink: 0;
+        }
+
+        .phase-dot.active {
+            background: var(--color-primary);
+            width: 12px;
+            height: 12px;
+            margin-left: -2px;
+            margin-right: -2px;
+        }
+
+        .phase-dot.completed {
+            background: var(--color-success);
+        }
+
+        .phase-label {
+            color: var(--color-text-secondary);
+        }
+
+        .phase-label.active {
+            color: var(--color-text);
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--color-text);
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+            color: var(--color-text);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(33, 88, 208, 0.1);
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--color-surface);
+            border-radius: var(--radius);
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-header {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--color-text);
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            margin-top: 24px;
+            justify-content: flex-end;
+        }
+
+        .tasks-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            background: var(--color-bg);
+            border-radius: 6px;
+            border-left: 4px solid var(--color-primary);
+        }
+
+        .task-item.completed {
+            opacity: 0.6;
+            border-left-color: var(--color-success);
+        }
+
+        .task-checkbox {
+            width: 18px;
+            height: 18px;
+            margin-top: 2px;
+            cursor: pointer;
+            accent-color: var(--color-primary);
+        }
+
+        .task-info {
+            flex: 1;
+        }
+
+        .task-label {
+            font-weight: 500;
+            font-size: 13px;
+            color: var(--color-text);
+            margin-bottom: 4px;
+        }
+
+        .task-desc {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+        }
+
+        .milestone {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: var(--color-bg);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--color-primary);
+        }
+
+        .milestone-name {
+            font-weight: 500;
+            font-size: 13px;
+            color: var(--color-text);
+        }
+
+        .milestone-date {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .board {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .board {
+                grid-template-columns: 1fr;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">⚙️</div>
+                <span>Sagestone Copilot Agent</span>
+            </div>
+            <div class="header-actions">
+                <span class="status-badge in-progress">⏱️ Phase 1 - In Progress</span>
+                <button class="btn btn-secondary" onclick="generateReport()">📊 Generate Report</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="main-content">
+            <div>
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab(event, 'board')">📋 Kanban Board</button>
+                    <button class="tab" onclick="switchTab(event, 'checklist')">✓ Task Checklist</button>
+                    <button class="tab" onclick="switchTab(event, 'timeline')">📅 Timeline</button>
+                    <button class="tab" onclick="switchTab(event, 'commands')">💬 Copilot Commands</button>
+                </div>
+
+                <!-- Kanban Board Tab -->
+                <div id="board" class="tab-content active">
+                    <div class="board">
+                        <div class="column">
+                            <div class="column-header">
+                                📌 Backlog
+                                <span class="column-count">8</span>
+                            </div>
+                            <div class="task-card medium-priority">
+                                <div class="task-title">Analytics Dashboard Setup</div>
+                                <div class="task-meta">
+                                    <span class="task-assignee">DevOps</span>
+                                </div>
+                            </div>
+                            <div class="task-card low-priority">
+                                <div class="task-title">Integrations Visual Update</div>
+                                <div class="task-meta">
+                                    <span class="task-assignee">Designer</span>
+                                </div>
+                            </div>
+                            <div class="task-card low-priority">
+                                <div class="task-title">Gather Competitive UI References</div>
+                                <div class="task-meta">
+                                    <span class="task-assignee">PM</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="column">
+                            <div class="column-header">
+                                🔄 In Progress
+                                <span class="column-count">3</span>
+                            </div>
+                            <div class="task-card high-priority">
+                                <div class="task-title">UX Audit & Discovery</div>
+                                <div class="task-meta">
+                                    <span class="task-assignee">Designer</span>
+                                </div>
+                                <div class="task-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 60%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="task-card high-priority">
+                                <div class="task-title">Homepage Hero Section Design</div>
+                                <div class="task-meta">
+                                    <span class="task-assignee">Designer</span>
+                                </div>
+                                <div class="task-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 40%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="task-card medium-priority">
+                                <div class="task-title">Product Demo Video Script</div>
+                                <div class="task-meta">
+                                    <span class="task-assignee">Marketing</span>
+                                </div>
+                                <div class="task-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 50%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="column">
+                            <div class="column-header">
+                                🔍 Review / QA
+                                <span class="column-count">2</span>
+                            </div>
+                            <div class="task-card low-priority">
+                                <div class="task-title">Mobile Responsiveness QA</div>
+                                <div class="task-meta">
+                                    <span class="task-assignee">QA</span>
+                                </div>
+                                <div class="task-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 75%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="task-card low-priority">
+                                <div class="task-title">Broken Link & Typo QA Pass</div>
+                                <div class="task-meta">
+                                    <span class="task-assignee">QA</span>
+                                </div>
+                                <div class="task-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 30%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="column">
+                            <div class="column-header">
+                                ✅ Done
+                                <span class="column-count">5</span>
+                            </div>
+                            <div class="task-card">
+                                <div class="task-title">Competitive Analysis Report</div>
+                                <div class="task-meta">
+                                    <span class="task-assignee">PM</span>
+                                </div>
+                                <div class="task-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 100%; background: var(--color-success)"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="task-card">
+                                <div class="task-title">Stakeholder Kickoff Meeting</div>
+                                <div class="task-meta">
+                                    <span class="task-assignee">PM</span>
+                                </div>
+                                <div class="task-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 100%; background: var(--color-success)"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="task-card">
+                                <div class="task-title">GitHub Repository Setup</div>
+                                <div class="task-meta">
+                                    <span class="task-assignee">DevOps</span>
+                                </div>
+                                <div class="task-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 100%; background: var(--color-success)"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task Checklist Tab -->
+                <div id="checklist" class="tab-content">
+                    <div style="background: var(--color-surface); padding: 20px; border-radius: var(--radius); border: 1px solid var(--color-border);">
+                        <h3 style="margin-bottom: 20px;">Sprint 1: UX Audit & Discovery (Days 1-5)</h3>
+                        <div class="tasks-list">
+                            <label class="task-item">
+                                <input type="checkbox" class="task-checkbox" checked>
+                                <div class="task-info">
+                                    <div class="task-label">Conduct UX Audit</div>
+                                    <div class="task-desc">Review current website, identify pain points and opportunities</div>
+                                </div>
+                            </label>
+                            <label class="task-item">
+                                <input type="checkbox" class="task-checkbox" checked>
+                                <div class="task-info">
+                                    <div class="task-label">Competitive Analysis</div>
+                                    <div class="task-desc">Research Jasper, SurferSEO, SEMRush, and other competitors</div>
+                                </div>
+                            </label>
+                            <label class="task-item">
+                                <input type="checkbox" class="task-checkbox">
+                                <div class="task-info">
+                                    <div class="task-label">Draft Improvements</div>
+                                    <div class="task-desc">Document recommendations and opportunities for enhancement</div>
+                                </div>
+                            </label>
+                            <label class="task-item completed">
+                                <input type="checkbox" class="task-checkbox" checked disabled>
+                                <div class="task-info">
+                                    <div class="task-label">Stakeholder Kickoff</div>
+                                    <div class="task-desc">Present findings and get team alignment</div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <h3 style="margin: 30px 0 20px 0;">Sprint 2: Design & Planning (Days 6-12)</h3>
+                        <div class="tasks-list">
+                            <label class="task-item">
+                                <input type="checkbox" class="task-checkbox">
+                                <div class="task-info">
+                                    <div class="task-label">Homepage Redesign</div>
+                                    <div class="task-desc">Create hero section, navigation, value proposition</div>
+                                </div>
+                            </label>
+                            <label class="task-item">
+                                <input type="checkbox" class="task-checkbox">
+                                <div class="task-info">
+                                    <div class="task-label">Product Demo Assets</div>
+                                    <div class="task-desc">Create GIF, video script, and interactive previews</div>
+                                </div>
+                            </label>
+                            <label class="task-item">
+                                <input type="checkbox" class="task-checkbox">
+                                <div class="task-info">
+                                    <div class="task-label">Onboarding Flow Design</div>
+                                    <div class="task-desc">Design user onboarding journey with tooltips</div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <h3 style="margin: 30px 0 20px 0;">Sprint 3: Development (Days 13-22)</h3>
+                        <div class="tasks-list">
+                            <label class="task-item">
+                                <input type="checkbox" class="task-checkbox">
+                                <div class="task-info">
+                                    <div class="task-label">Navigation & Header</div>
+                                    <div class="task-desc">Build responsive header and main navigation</div>
+                                </div>
+                            </label>
+                            <label class="task-item">
+                                <input type="checkbox" class="task-checkbox">
+                                <div class="task-info">
+                                    <div class="task-label">Onboarding Integration</div>
+                                    <div class="task-desc">Integrate onboarding walkthrough and tooltips</div>
+                                </div>
+                            </label>
+                            <label class="task-item">
+                                <input type="checkbox" class="task-checkbox">
+                                <div class="task-info">
+                                    <div class="task-label">Trust Elements</div>
+                                    <div class="task-desc">Add testimonials, client logos, trust badges</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeline Tab -->
+                <div id="timeline" class="tab-content">
+                    <div style="background: var(--color-surface); padding: 20px; border-radius: var(--radius); border: 1px solid var(--color-border);">
+                        <h3 style="margin-bottom: 20px;">Project Milestones & Phases</h3>
+                        <div style="margin-top: 20px;">
+                            <div class="milestone">
+                                <div>
+                                    <div class="milestone-name">🔴 Phase 1: UX Audit & Discovery</div>
+                                    <div class="milestone-date">Nov 30 - Dec 4 (5 days)</div>
+                                </div>
+                                <div style="text-align: right; font-weight: 600; color: var(--color-warning);">50%</div>
+                            </div>
+                            <div class="milestone">
+                                <div>
+                                    <div class="milestone-name">🟡 Phase 2: Design & Planning</div>
+                                    <div class="milestone-date">Dec 5 - Dec 12 (8 days)</div>
+                                </div>
+                                <div style="text-align: right; font-weight: 600; color: var(--color-text-secondary);">Upcoming</div>
+                            </div>
+                            <div class="milestone">
+                                <div>
+                                    <div class="milestone-name">🟢 Phase 3: Development</div>
+                                    <div class="milestone-date">Dec 13 - Dec 23 (11 days)</div>
+                                </div>
+                                <div style="text-align: right; font-weight: 600; color: var(--color-text-secondary);">Upcoming</div>
+                            </div>
+                            <div class="milestone">
+                                <div>
+                                    <div class="milestone-name">🔵 Phase 4: QA & Testing</div>
+                                    <div class="milestone-date">Dec 24 - Dec 28 (5 days)</div>
+                                </div>
+                                <div style="text-align: right; font-weight: 600; color: var(--color-text-secondary);">Upcoming</div>
+                            </div>
+                            <div class="milestone">
+                                <div>
+                                    <div class="milestone-name">⚪ Phase 5: Go-Live & Optimization</div>
+                                    <div class="milestone-date">Dec 29 - Dec 30 (2 days)</div>
+                                </div>
+                                <div style="text-align: right; font-weight: 600; color: var(--color-text-secondary);">Upcoming</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Copilot Commands Tab -->
+                <div id="commands" class="tab-content">
+                    <div style="background: var(--color-surface); padding: 20px; border-radius: var(--radius); border: 1px solid var(--color-border);">
+                        <h3 style="margin-bottom: 20px;">GitHub Copilot Agent Commands</h3>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label class="form-label" style="margin-top: 0;">Enter Copilot Command</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="text" class="form-input" id="copilotInput" placeholder="@copilot list tasks" style="flex: 1;">
+                                <button class="btn btn-primary" onclick="executeCopilotCommand()">Execute</button>
+                            </div>
+                            <div id="copilotOutput" style="margin-top: 16px; padding: 12px; background: var(--color-bg); border-radius: 6px; display: none; white-space: pre-wrap; font-family: monospace; font-size: 12px; color: var(--color-text-secondary);"></div>
+                        </div>
+
+                        <h3 style="margin: 30px 0 16px 0;">Available Commands</h3>
+                        <div style="display: grid; gap: 12px;">
+                            <div style="padding: 12px; background: var(--color-bg); border-radius: 6px; border-left: 3px solid var(--color-primary);">
+                                <div style="font-weight: 600; margin-bottom: 4px;">@copilot list tasks</div>
+                                <div style="font-size: 12px; color: var(--color-text-secondary);">Show all project tasks with status and assignees</div>
+                            </div>
+                            <div style="padding: 12px; background: var(--color-bg); border-radius: 6px; border-left: 3px solid var(--color-primary);">
+                                <div style="font-weight: 600; margin-bottom: 4px;">@copilot show board</div>
+                                <div style="font-size: 12px; color: var(--color-text-secondary);">Display Kanban board with all task columns</div>
+                            </div>
+                            <div style="padding: 12px; background: var(--color-bg); border-radius: 6px; border-left: 3px solid var(--color-primary);">
+                                <div style="font-weight: 600; margin-bottom: 4px;">@copilot find blockers</div>
+                                <div style="font-size: 12px; color: var(--color-text-secondary);">Identify tasks blocking other work</div>
+                            </div>
+                            <div style="padding: 12px; background: var(--color-bg); border-radius: 6px; border-left: 3px solid var(--color-primary);">
+                                <div style="font-weight: 600; margin-bottom: 4px;">@copilot assign task [name] to [role]</div>
+                                <div style="font-size: 12px; color: var(--color-text-secondary);">Assign a task to a team member</div>
+                            </div>
+                            <div style="padding: 12px; background: var(--color-bg); border-radius: 6px; border-left: 3px solid var(--color-primary);">
+                                <div style="font-weight: 600; margin-bottom: 4px;">@copilot update task [name] to [percentage]%</div>
+                                <div style="font-size: 12px; color: var(--color-text-secondary);">Update task progress percentage</div>
+                            </div>
+                            <div style="padding: 12px; background: var(--color-bg); border-radius: 6px; border-left: 3px solid var(--color-primary);">
+                                <div style="font-weight: 600; margin-bottom: 4px;">@copilot generate weekly report</div>
+                                <div style="font-size: 12px; color: var(--color-text-secondary);">Generate weekly status report</div>
+                            </div>
+                            <div style="padding: 12px; background: var(--color-bg); border-radius: 6px; border-left: 3px solid var(--color-primary);">
+                                <div style="font-weight: 600; margin-bottom: 4px;">@copilot risk assessment</div>
+                                <div style="font-size: 12px; color: var(--color-text-secondary);">Analyze project risks and mitigation</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="card">
+                    <div class="card-title">📊 Project Health</div>
+                    <div class="stat">
+                        <span class="stat-label">Overall Progress</span>
+                        <span class="stat-value">35%</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Tasks Completed</span>
+                        <span class="stat-value">5 / 18</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">On Track</span>
+                        <span class="stat-value" style="color: var(--color-success);">✓ Yes</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Days Remaining</span>
+                        <span class="stat-value">30</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">⏱️ Current Phase</div>
+                    <div class="phase-timeline">
+                        <div class="phase-item">
+                            <div class="phase-dot active"></div>
+                            <div class="phase-label active">Discovery</div>
+                        </div>
+                        <div class="phase-item">
+                            <div class="phase-dot"></div>
+                            <div class="phase-label">Design</div>
+                        </div>
+                        <div class="phase-item">
+                            <div class="phase-dot"></div>
+                            <div class="phase-label">Dev</div>
+                        </div>
+                        <div class="phase-item">
+                            <div class="phase-dot"></div>
+                            <div class="phase-label">QA</div>
+                        </div>
+                        <div class="phase-item">
+                            <div class="phase-dot"></div>
+                            <div class="phase-label">Go-Live</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">👥 Team</div>
+                    <div class="stat">
+                        <span class="stat-label">Designer</span>
+                        <span class="stat-value" style="font-size: 13px;">2 tasks</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Developer</span>
+                        <span class="stat-value" style="font-size: 13px;">3 tasks</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">QA Engineer</span>
+                        <span class="stat-value" style="font-size: 13px;">2 tasks</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">PM</span>
+                        <span class="stat-value" style="font-size: 13px;">1 task</span>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" style="width: 100%;" onclick="openTaskModal()">➕ Add New Task</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Task Modal -->
+    <div class="modal-overlay" id="taskModal">
+        <div class="modal">
+            <div class="modal-header">Create New Task</div>
+            <div class="form-group">
+                <label class="form-label">Task Title</label>
+                <input type="text" class="form-input" id="taskTitle" placeholder="Enter task name">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea class="form-textarea" id="taskDesc" placeholder="Task description..."></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Assign To</label>
+                <select class="form-select" id="taskAssignee">
+                    <option>Designer</option>
+                    <option>Developer</option>
+                    <option>QA Engineer</option>
+                    <option>Project Manager</option>
+                    <option>DevOps</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Priority</label>
+                <select class="form-select" id="taskPriority">
+                    <option>Low</option>
+                    <option>Medium</option>
+                    <option>High</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeTaskModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="createTask()">Create Task</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(event, tabName) {
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function openTaskModal() {
+            document.getElementById('taskModal').classList.add('active');
+        }
+
+        function closeTaskModal() {
+            document.getElementById('taskModal').classList.remove('active');
+        }
+
+        function createTask() {
+            const title = document.getElementById('taskTitle').value;
+            const desc = document.getElementById('taskDesc').value;
+            const assignee = document.getElementById('taskAssignee').value;
+            const priority = document.getElementById('taskPriority').value;
+
+            if (title.trim() === '') {
+                alert('Please enter a task title');
+                return;
+            }
+
+            alert(`Task Created:\n\nTitle: ${title}\nAssignee: ${assignee}\nPriority: ${priority}`);
+            closeTaskModal();
+            document.getElementById('taskTitle').value = '';
+            document.getElementById('taskDesc').value = '';
+        }
+
+        function executeCopilotCommand() {
+            const input = document.getElementById('copilotInput').value;
+            const output = document.getElementById('copilotOutput');
+
+            if (input.includes('list tasks')) {
+                output.textContent = `✓ Sagestone Project Tasks (18 total)\n\n[Backlog] 8 tasks\n[In Progress] 3 tasks\n[Review] 2 tasks\n[Done] 5 tasks\n\nTop Priorities:\n- UX Audit & Discovery (60% complete)\n- Homepage Hero Design (40% complete)\n- Product Demo Script (50% complete)`;
+            } else if (input.includes('find blockers')) {
+                output.textContent = `⚠️ Project Blockers Identified:\n\n1. Pending: Competitor logo collection (needed for trust section)\n2. Waiting: Marketing approval on demo video script\n3. Dependencies: Homepage design blocks documentation page layout\n\nRecommendation: Expedite marketing approval to unblock dev phase`;
+            } else if (input.includes('risk assessment')) {
+                output.textContent = `📋 Project Risk Assessment\n\nCritical Risks:\n- Timeline compression (30 days for 5 phases)\n- Resource bottleneck: Designer working on 2+ concurrent tasks\n- QA testing may reveal major issues late in project\n\nMitigation:\n- Add 1 designer or reallocate tasks\n- Start QA earlier in development\n- Use staging environment for parallel testing`;
+            } else if (input.includes('generate') && input.includes('report')) {
+                output.textContent = `📊 Weekly Status Report (Nov 30 - Dec 7)\n\nPhase 1 Progress: 50%\nTasks Completed: 5 / 18 (28%)\nOn Track: ✓ Yes\n\nCompleted This Week:\n✓ Stakeholder kickoff\n✓ GitHub repo setup\n✓ Competitive analysis\n\nNext Week:\n→ Finalize UX recommendations\n→ Start homepage design\n→ Create demo assets`;
+            } else {
+                output.textContent = `Processing command: "${input}"\n\nCommand executed. Check GitHub Issues for detailed updates.`;
+            }
+
+            output.style.display = 'block';
+        }
+
+        function generateReport() {
+            alert('Generating comprehensive project report...\n\nReport includes:\n• Project Timeline (30 days)\n• Task Breakdown (18 tasks)\n• Team Capacity Analysis\n• Risk Assessment\n• Dependency Map\n• Budget & Resource Allocation\n\nReport will be exported as PDF.');
+        }
+
+        // Close modal on overlay click
+        document.getElementById('taskModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeTaskModal();
+            }
+        });
+    </script>
+</body>
+</html>
